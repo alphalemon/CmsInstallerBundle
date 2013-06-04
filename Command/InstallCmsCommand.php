@@ -39,8 +39,10 @@ class InstallCmsCommand extends ContainerAwareCommand
         $this
             ->setDescription('Installs the AlphaLemon CMS for your system')
             ->setDefinition(array(
+                new InputOption('domain', '', InputOption::VALUE_REQUIRED, 'The domain name for final deployment', 'alphalemon'),
                 new InputOption('company', '', InputOption::VALUE_REQUIRED, 'Your company name, where the main bundle that manages your site lives'),
                 new InputOption('bundle', '', InputOption::VALUE_REQUIRED, 'The bundle that manages your site'),
+                new InputOption('generate', '', InputOption::VALUE_OPTIONAL, 'The bundle that manages your site'),
                 new InputOption('driver', '', InputOption::VALUE_REQUIRED, 'The database driver to use', 'mysql'),
                 new InputOption('host', '', InputOption::VALUE_OPTIONAL, 'The database host', 'localhost'),
                 new InputOption('database', '', InputOption::VALUE_OPTIONAL, 'The database name', 'alphalemon'),
@@ -58,14 +60,17 @@ class InstallCmsCommand extends ContainerAwareCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $installer = new Installer($this->getContainer()->getParameter('kernel.root_dir') . '/../vendor');
+
+        $installer = $this->getContainer()->get('installer.service.alphalemon');
         $installer->install($input->getOption('company'),
-                $input->getOption('bundle'),
-                $input->getOption('dsn'),
-                $input->getOption('database'),
-                $input->getOption('user'),
-                $input->getOption('password'),
-                $input->getOption('driver'));
+            $input->getOption('domain'),
+            $input->getOption('bundle'),
+            $input->getOption('dsn'),
+            $input->getOption('database'),
+            $input->getOption('user'),
+            $input->getOption('password'),
+            $input->getOption('driver'),
+            $input->getOption('generate'));
     }
 
     protected function interact(InputInterface $input, OutputInterface $output)
@@ -90,8 +95,8 @@ class InstallCmsCommand extends ContainerAwareCommand
         ));
 
         $namespaceRegex = '/^(?:[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*\\\?)+$/';
-        $defaultValue = "Acme";
-        $question = array(
+        $defaultValue   = "Acme";
+        $question       = array(
             "<info>Company name:</info> [<comment>$defaultValue</comment>] ",
         );
 
@@ -99,7 +104,7 @@ class InstallCmsCommand extends ContainerAwareCommand
         $input->setOption('company', $company);
 
         $defaultValue = "WebSiteBundle";
-        $question = array(
+        $question     = array(
             "<info>Bundle name:</info> [<comment>$defaultValue</comment>] ",
         );
 
@@ -107,12 +112,12 @@ class InstallCmsCommand extends ContainerAwareCommand
         $input->setOption('bundle', $bundle);
 
         $defaultValue = "mysql";
-        $question = array(
+        $question     = array(
             "<info>Database driver (mysql, pgsql, other):</info> [<comment>$defaultValue</comment>]  ",
         );
-        $driver = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z]+/');
+        $driver       = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z]+/');
 
-        if(!in_array($driver, array('mysql', 'pgsql', 'other'))) {
+        if (!in_array($driver, array('mysql', 'pgsql', 'other'))) {
             throw new \InvalidArgumentException(sprintf('Driver value must be one of the following: [mysql, pgsql, other]. You entered %s. Operation aborted', $driver));
         }
 
@@ -120,41 +125,41 @@ class InstallCmsCommand extends ContainerAwareCommand
 
         if ($driver != 'other') {
             $defaultValue = "localhost";
-            $question = array(
+            $question     = array(
                 "<info>Database host:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $host = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z0-9\.]+/');
+            $host         = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z0-9\.]+/');
             $input->setOption('host', $host);
 
             $defaultValue = "alphalemon";
-            $question = array(
+            $question     = array(
                 "<info>Database name:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $database = $this->askAndValidateRegex($output, $question, $defaultValue);
+            $database     = $this->askAndValidateRegex($output, $question, $defaultValue);
             $input->setOption('database', $database);
 
             $defaultValue = ($driver == "mysql") ? 3306 : 5432;
-            $question = array(
+            $question     = array(
                 "<info>Database port:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $port = $this->askAndValidateRegex($output, $question, $defaultValue, '/[0-9]+/');
+            $port         = $this->askAndValidateRegex($output, $question, $defaultValue, '/[0-9]+/');
             $input->setOption('port', $port);
 
             $defaultValue = "root";
-            $question = array(
+            $question     = array(
                 "<info>Database user:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $user = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z]+/');
+            $user         = $this->askAndValidateRegex($output, $question, $defaultValue, '/[a-z]+/');
             $input->setOption('user', $user);
 
             $defaultValue = "";
-            $question = array(
+            $question     = array(
                 "<info>Database password:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $password = $this->askAndValidateRegex($output, $question, $defaultValue);
+            $password     = $this->askAndValidateRegex($output, $question, $defaultValue);
             $input->setOption('password', $password);
 
-            switch($driver) {
+            switch ($driver) {
                 case 'mysql':
                     $dsn = sprintf('%s:host=%s;port=%s;dbname=%s', $driver, $host, $port, $database);
                     break;
@@ -162,13 +167,12 @@ class InstallCmsCommand extends ContainerAwareCommand
                     $dsn = sprintf('%s:host=%s;port=%s;dbname=%s;user=%s;password=%s', $driver, $host, $port, $database, $user, $password);
                     break;
             }
-        }
-        else {
+        } else {
             $defaultValue = "";
-            $question = array(
+            $question     = array(
                 "<info>dsn:</info> [<comment>$defaultValue</comment>]  ",
             );
-            $dsn = $this->askAndValidateRegex($output, $question, $defaultValue);
+            $dsn          = $this->askAndValidateRegex($output, $question, $defaultValue);
             if (trim($dsn) == "") {
                 throw new \InvalidArgumentException('The dsn option cannot be empty. Operation aborted');
             }
@@ -179,7 +183,7 @@ class InstallCmsCommand extends ContainerAwareCommand
 
     private function askAndValidateRegex(OutputInterface $output, array $question, $defaultValue, $regex = null)
     {
-        $value = $this->getHelper('dialog')->askAndValidate($output, $question, function($input) use($regex) {
+        $value = $this->getHelper('dialog')->askAndValidate($output, $question, function ($input) use ($regex) {
             if (null !== $regex && !preg_match($regex, $input)) {
                 throw new \InvalidArgumentException('The entered value contains invalid characters.');
             }

@@ -51,11 +51,24 @@ class Installer {
         $this->filesystem = new Filesystem();
     }
 
-    public function install($companyName, $bundleName, $dsn, $database, $user, $password, $driver)
+    /**
+     * @param string $companyName
+     * @param string $bundleName
+     * @param string $dsn
+     * @param string $database
+     * @param string $user
+     * @param string $password
+     * @param string $driver
+     */
+    public function install($companyName, $bundleName, $dsn, $database, $user, $password, $driver,$generate = false)
     {
         $this->companyName = $companyName;
         $this->bundleName = $bundleName;
         $this->dsn = $dsn;
+
+        if ($generate !==false) {
+            $this->generateBundleFromName($companyName, $bundleName);
+        }
 
         // strip the dsn from the database name because it might not be created yet
         $this->shortDsn = preg_replace('/[;]?[\w]+=' . $database . '[;]?/', '', $dsn);
@@ -420,5 +433,26 @@ class Installer {
             );
 
         $this->commandsProcessor->executeCommands($commands, function($type, $buffer){ echo $buffer; });
+    }
+
+    /**
+     * @param string $company
+     * @param string $bundle
+     * @param null $output
+     */
+    public function generateBundleFromName($company, $bundle, $output = null)
+    {
+        $name      = 'generate:bundle';
+        $namespace = sprintf('%s\%s', $company, $bundle);
+        $command   = $this->getApplication()->find($name);
+
+        $arguments = array(
+            'command'     => $name,
+            '--namespace' => $namespace,
+            '--dir'       => 'src',
+            '--format'    => 'annotation'
+        );
+        $input = new ArrayInput($arguments);
+        return $command->run($input, $output);
     }
 }

@@ -1,0 +1,7 @@
+parameters:
+  vendor_root: "%kernel.root_dir%/../vendor/"
+  root_dir:    "%kernel.root_dir%/../"
+services:
+  installer.service.alphalemon:
+    class: AlphaLemon\CmsInstallerBundle\Service\InstallerService
+    arguments: [ %root_dir%, @service_container ]
