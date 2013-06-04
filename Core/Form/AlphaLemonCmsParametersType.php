@@ -30,9 +30,13 @@ class AlphaLemonCmsParametersType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
+            ->add('domain', 'text', array('attr' => array('size' => '52')))
             ->add('company', 'text')
             ->add('bundle', 'text')
-            ->add('driver', 'choice', array('choices' => array('mysql' => 'mysql', 'pgsql' => 'postgres', 'other' => 'other')))
+            ->add('generate', 'checkbox', array('required' => false))
+            ->add('driver', 'choice', array('choices' => array('mysql' => 'mysql',
+                                                               'pgsql' => 'postgres',
+                                                               'other' => 'other')))
             ->add('host', 'text')
             ->add('database', 'text')
             ->add('port', 'text', array('required' => false))
@@ -44,8 +48,7 @@ class AlphaLemonCmsParametersType extends AbstractType
                 'second_name'     => 'password_again',
                 'invalid_message' => 'The password fields must match.',
             ))
-            ->add('dsn', 'text', array('required' => false))
-        ;
+            ->add('dsn', 'text', array('required' => false));
     }
 
     public function getName()

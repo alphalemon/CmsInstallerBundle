@@ -77,6 +77,18 @@
         </div>
         {% endif %}
         <div>
+            <h2>Domain for this Site</h2>
+            <p>
+                For the Generation a domain is required. The value will be used for the route - prefix
+            </p>
+        </div>
+        <div id="al_domain_section">
+            <div class="al_text">
+                {{ form_row(form.domain) }}
+            </div>
+            <div class="al_clear"></div>
+        </div>
+        <div>
             <h2>Bundle data</h2>
             <p>
             AlphaLemon CMS requires a bundle where AlphaLemon CMS will save the contents you insert. Every time
@@ -90,6 +102,9 @@
             </div>
             <div class="al_column">
             {{ form_row(form.bundle) }}
+            </div>
+            <div class="al_column">
+                {{ form_row(form.generate) }}
             </div>
             <div class="al_clear"></div>
         </div>
